@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import {
   StyleSheet, Text, View, TextInput, TouchableOpacity, 
-  ActivityIndicator, Alert, SafeAreaView, KeyboardAvoidingView, Platform
+  ActivityIndicator, Alert, SafeAreaView, KeyboardAvoidingView, 
+  Platform, ImageBackground, Image, useWindowDimensions
 } from 'react-native';
 
-import { useTheme } from '../theme/ThemeContext';
 import { loginWithEmail, loginAsGuest } from '../services/authService';
 
-// Lưu ý: Import type Navigation để chuyển hướng sang trang Đăng ký
 export default function LoginScreen({ navigation }: any) {
-  const { colors } = useTheme();
+  // Lấy kích thước màn hình để tự động đổi layout (Dọc cho điện thoại, Ngang cho Tablet)
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768; 
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Xử lý Đăng nhập Email
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ Email và Mật khẩu.');
@@ -24,7 +24,6 @@ export default function LoginScreen({ navigation }: any) {
     setIsLoading(true);
     try {
       await loginWithEmail(email, password);
-      // Đăng nhập thành công, Firebase onAuthStateChanged ở AppNavigator sẽ tự động chuyển màn hình
     } catch (error: any) {
       Alert.alert('Đăng nhập thất bại', error.message || 'Sai tài khoản hoặc mật khẩu.');
     } finally {
@@ -32,7 +31,6 @@ export default function LoginScreen({ navigation }: any) {
     }
   };
 
-  // Xử lý Đăng nhập Khách
   const handleGuestLogin = async () => {
     setIsLoading(true);
     try {
@@ -45,107 +43,222 @@ export default function LoginScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-        style={styles.container}
+    <SafeAreaView style={styles.safeArea}>
+      <ImageBackground 
+        source={require('../../assets/background.jpg')} 
+        style={styles.backgroundImage}
+        resizeMode="cover"
       >
-        <View style={styles.content}>
-          
-          {/* Tiêu đề */}
-          <View style={styles.headerContainer}>
-            <Text style={[styles.title, { color: colors.text }]}>Health Monitor</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Đăng nhập để theo dõi sức khỏe của bạn
-            </Text>
-          </View>
-
-          {/* Form nhập liệu */}
-          <View style={styles.formContainer}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Email</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.input, color: colors.text, borderColor: colors.border }]}
-              placeholder="Nhập email của bạn"
-              placeholderTextColor={colors.textMuted}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
-
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Mật khẩu</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.input, color: colors.text, borderColor: colors.border }]}
-              placeholder="Nhập mật khẩu"
-              placeholderTextColor={colors.textMuted}
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-
-            {/* Nút Đăng nhập Email */}
-            <TouchableOpacity 
-              style={[styles.primaryButton, { backgroundColor: colors.primary }]} 
-              onPress={handleLogin}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.primaryButtonText}>Đăng nhập</Text>
-              )}
-            </TouchableOpacity>
-
-            <View style={styles.divider}>
-              <View style={[styles.line, { backgroundColor: colors.border }]} />
-              <Text style={[styles.dividerText, { color: colors.textMuted }]}>HOẶC</Text>
-              <View style={[styles.line, { backgroundColor: colors.border }]} />
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+          style={styles.overlay}
+        >
+          {/* Khung Card màu trắng bao bọc toàn bộ form */}
+          <View style={[styles.cardContainer, { maxWidth: isTablet ? 850 : 400 }, isTablet && styles.cardRow]}>
+            
+            {/* Vùng chứa Logo */}
+            <View style={[styles.logoSection, isTablet && styles.logoSectionRow]}>
+              <Image 
+                source={require('../../assets/logo.jpg')} 
+                style={[styles.logo, isTablet && styles.logoTablet]}
+                resizeMode="contain"
+              />
             </View>
 
-            {/* Nút Đăng nhập Khách */}
-            <TouchableOpacity 
-              style={[styles.guestButton, { borderColor: colors.border, backgroundColor: colors.card }]} 
-              onPress={handleGuestLogin}
-              disabled={isLoading}
-            >
-              <Text style={[styles.guestButtonText, { color: colors.text }]}>Sử dụng tài khoản Khách</Text>
-            </TouchableOpacity>
+            {/* Đường kẻ dọc chia cắt (Chỉ hiện trên Tablet/Web) */}
+            {isTablet && <View style={styles.divider} />}
 
-            {/* Nút Google / Apple có thể thêm ở đây sau */}
+            {/* Vùng chứa Form đăng nhập */}
+            <View style={[styles.formSection, isTablet && styles.formSectionRow]}>
+              
+              <Text style={styles.title}>Hệ Thống Giám Sát Nhịp Tim{'\n'}Và Nồng Độ Oxi</Text>
+
+              <View style={styles.formContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email sinh viên (VD: 21119233@...)"
+                  placeholderTextColor="#999"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                />
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Mật khẩu"
+                  placeholderTextColor="#999"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                />
+
+                <TouchableOpacity 
+                  style={styles.primaryButton} 
+                  onPress={handleLogin}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.primaryButtonText}>ĐĂNG NHẬP</Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.guestButton} 
+                  onPress={handleGuestLogin}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.guestButtonText}>Đăng nhập Khách</Text>
+                </TouchableOpacity>
+
+                <View style={styles.footer}>
+                  <Text style={styles.footerText}>Chưa có tài khoản? </Text>
+                  <TouchableOpacity onPress={() => navigation.navigate('Register')} disabled={isLoading}>
+                    <Text style={styles.registerLink}>Đăng ký ngay</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+            </View>
           </View>
-
-          {/* Chuyển sang trang Đăng ký */}
-          <View style={styles.footer}>
-            <Text style={[styles.footerText, { color: colors.textSecondary }]}>Chưa có tài khoản? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Register')} disabled={isLoading}>
-              <Text style={[styles.registerLink, { color: colors.primary }]}>Đăng ký ngay</Text>
-            </TouchableOpacity>
-          </View>
-
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </ImageBackground>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  container: { flex: 1, justifyContent: 'center' },
-  content: { paddingHorizontal: 24, paddingBottom: 40 },
-  headerContainer: { marginBottom: 32, alignItems: 'center' },
-  title: { fontSize: 32, fontWeight: '800', marginBottom: 8 },
-  subtitle: { fontSize: 15, textAlign: 'center' },
-  formContainer: { marginBottom: 24 },
-  label: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
-  input: { height: 52, borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, fontSize: 16, marginBottom: 16 },
-  primaryButton: { height: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
-  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
-  line: { flex: 1, height: 1 },
-  dividerText: { marginHorizontal: 16, fontSize: 12, fontWeight: '600' },
-  guestButton: { height: 52, borderWidth: 1, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  guestButtonText: { fontSize: 16, fontWeight: '600' },
-  footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 16 },
-  footerText: { fontSize: 14 },
-  registerLink: { fontSize: 14, fontWeight: '700' },
+  safeArea: { 
+    flex: 1 
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 15, 40, 0.65)', // Làm tối nền hơn một chút để Card trắng nổi bật
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20, // Tạo khoảng cách an toàn với mép màn hình
+  },
+  cardContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 25,
+    width: '100%',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 40,
+  },
+  logoSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  logoSectionRow: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  logo: {
+    width: 110, // Thu nhỏ logo trên điện thoại để form không bị quá dài
+    height: 110,
+  },
+  logoTablet: {
+    width: 180,
+    height: 180,
+  },
+  divider: {
+    width: 1,
+    height: '85%',
+    backgroundColor: '#eeeeee',
+    marginHorizontal: 30,
+  },
+  formSection: {
+    width: '100%',
+  },
+  formSectionRow: {
+    flex: 1.3,
+  },
+  title: { 
+    fontSize: 18, 
+    fontWeight: '800', 
+    color: '#1a365d', // Đổi tiêu đề sang màu xanh đen cho sang trọng
+    textAlign: 'center',
+    lineHeight: 26,
+    marginBottom: 25,
+  },
+  formContainer: { 
+    width: '100%' 
+  },
+  input: { 
+    height: 52, 
+    backgroundColor: '#f5f7fa', // Màu nền xám xanh nhạt 
+    borderRadius: 26, // Bo cong tròn
+    paddingHorizontal: 22, 
+    fontSize: 14.5, 
+    marginBottom: 16,
+    color: '#333',
+    borderWidth: 1,
+    borderColor: '#e4e7eb',
+  },
+  primaryButton: { 
+    height: 52, 
+    backgroundColor: '#2ecc71',
+    borderRadius: 26, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    marginTop: 8,
+    shadowColor: '#2ecc71',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  primaryButtonText: { 
+    color: '#FFFFFF', 
+    fontSize: 15, 
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  guestButton: { 
+    height: 52, 
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5, 
+    borderColor: '#e4e7eb',
+    borderRadius: 26, 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  guestButtonText: { 
+    fontSize: 15, 
+    fontWeight: '600',
+    color: '#666',
+  },
+  footer: { 
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginTop: 24,
+  },
+  footerText: { 
+    fontSize: 14,
+    color: '#777',
+  },
+  registerLink: { 
+    fontSize: 14, 
+    fontWeight: 'bold',
+    color: '#2ecc71',
+  },
 });

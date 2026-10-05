@@ -61,12 +61,12 @@ export default function DashboardScreen() {
     if (healthData.bpm <= 0 || healthData.spo2 <= 0) return { title: 'Đang chờ dữ liệu', message: 'Đặt ngón tay lên cảm biến.', level: 'idle' };
     
     if (healthData.bpm > thresholds.maxBpm || healthData.spo2 < thresholds.minSpo2) {
-      return { title: 'Vượt ngưỡng cảnh báo', message: 'Chỉ số đang vượt ngưỡng.', level: 'critical' };
+      return { title: 'Chỉ số đang vượt ngưỡng', message: 'Chỉ số đang vượt ngưỡng.', level: 'critical' };
     }
     if (healthData.bpm > thresholds.maxBpm - 10 || healthData.spo2 < thresholds.minSpo2 + 2 || healthData.bpm < 60) {
       return { title: 'Cần theo dõi', message: 'Chỉ số đang ở vùng cần theo dõi.', level: 'warning' };
     }
-    return { title: 'Trong ngưỡng theo dõi', message: 'Các chỉ số bình thường.', level: 'normal' };
+    return { title: 'Các chỉ số bình thường', message: 'Các chỉ số bình thường.', level: 'normal' };
   }, [healthData.bpm, healthData.spo2, thresholds]);
 
   const analysisColor =
