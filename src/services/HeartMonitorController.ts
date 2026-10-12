@@ -87,7 +87,13 @@ class HeartMonitorController {
       this.alertActive.spo2 = false;
     }
 
-    // 3. KÍCH HOẠT CHUỖI HÀNH ĐỘNG TỰ ĐỘNG LIÊN TIẾP
+    // 3. KIỂM TRA HỦY RUNG KHI TRẠNG THÁI TRỞ VỀ BÌNH THƯỜNG
+    // Nếu cả BPM và SpO2 đều không ở mức báo động nữa, tắt chế độ rung
+    if (!isBpmCritical && !isSpo2Critical) {
+      Vibration.cancel();
+    }
+
+    // 4. KÍCH HOẠT CHUỖI HÀNH ĐỘNG TỰ ĐỘNG LIÊN TIẾP NẾU CÓ NGUY HIỂM MỚI
     if (isNewlyCritical) {
       this.executeAutomatedSOSSequence(immediateMessage.trim());
     }
@@ -99,7 +105,10 @@ class HeartMonitorController {
     const phone = profile?.emergencyPhone;
 
     // HÀNH ĐỘNG 1: Rung điện thoại liên tục dồn dập để báo động ngay lập tức
-    Vibration.vibrate([0, 600, 200, 600, 200, 600, 200, 1000]);
+    // Cấu trúc mẫu rung: [Chờ 0ms, Rung 1000ms, Nghỉ 500ms, Rung 1000ms, ...]
+    const VIBRATION_PATTERN = [0, 1000, 500, 1000, 500, 1000];
+    // Tham số `true` ở cuối giúp lặp lại chu kỳ rung này vô hạn lần cho đến khi bị hủy bằng Vibration.cancel()
+    Vibration.vibrate(VIBRATION_PATTERN, true);
 
     if (!phone) {
       console.warn('Chưa cấu hình SĐT khẩn cấp để thực thi tự động hóa.');
@@ -150,6 +159,9 @@ class HeartMonitorController {
     if (this.saveInterval) clearInterval(this.saveInterval);
     this.saveInterval = null;
     useHealthStore.getState().setConnected(false);
+    
+    // Đảm bảo điện thoại ngừng rung khi người dùng bấm dừng ứng dụng (Stop)
+    Vibration.cancel();
   }
 }
 
